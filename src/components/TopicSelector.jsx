@@ -52,7 +52,7 @@ const TopicSelector = ({ topics, onSelect, onCreate, loading }) => {
                 {/* Lista de temas existentes */}
                 {topics.map((topic) => (
                     <button
-                        key={topic.id}
+                        key={`topic-${topic.id}`}
                         onClick={() => onSelect(topic)}
                         disabled={loading}
                         className="p-6 bg-slate-800/60 border border-slate-700 rounded-3xl hover:bg-slate-700/60 hover:border-slate-600 transition-all flex items-center gap-4 group"
@@ -68,7 +68,7 @@ const TopicSelector = ({ topics, onSelect, onCreate, loading }) => {
                 ))}
 
                 {topics.length === 0 && !loading && (
-                    <div className="md:col-span-2 py-12 text-center text-slate-500">
+                    <div key="empty-state" className="md:col-span-2 lg:col-span-3 xl:col-span-4 py-12 text-center text-slate-500">
                         No tienes temas creados aún. ¡Empieza con el primero!
                     </div>
                 )}
