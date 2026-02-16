@@ -34,8 +34,12 @@ export class GoogleDriveService {
         });
     }
 
-    async findOrCreateFolder(folderName) {
-        const q = `name = '${folderName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+    async findOrCreateFolder(folderName, parentId = null) {
+        let q = `name = '${folderName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+        if (parentId) {
+            q += ` and '${parentId}' in parents`;
+        }
+
         const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}`, {
             headers: { Authorization: `Bearer ${this.accessToken}` }
         });
@@ -46,19 +50,70 @@ export class GoogleDriveService {
         }
 
         // Create folder
+        const body = {
+            name: folderName,
+            mimeType: 'application/vnd.google-apps.folder',
+        };
+        if (parentId) {
+            body.parents = [parentId];
+        }
+
         const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${this.accessToken}`,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                name: folderName,
-                mimeType: 'application/vnd.google-apps.folder',
-            }),
+            body: JSON.stringify(body),
         });
         const folder = await createResponse.json();
         return folder.id;
+    }
+
+    async uploadFile(folderId, fileName, fileBlob, mimeType) {
+        const metadata = {
+            name: fileName,
+            parents: [folderId],
+        };
+
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', fileBlob);
+
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${this.accessToken}` },
+            body: form,
+        });
+        return await response.json();
+    }
+
+    async getFile(fileId) {
+        const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+            headers: { Authorization: `Bearer ${this.accessToken}` }
+        });
+        return await response.blob();
+    }
+
+    async listFiles(folderId) {
+        const q = `'${folderId}' in parents and trashed = false`;
+        const response = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id, name, mimeType)`, {
+            headers: { Authorization: `Bearer ${this.accessToken}` }
+        });
+        const data = await response.json();
+        return data.files || [];
+    }
+
+    async updateJsonFile(fileId, content) {
+        const response = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+            method: 'PATCH',
+            headers: {
+                Authorization: `Bearer ${this.accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(content),
+        });
+        return await response.json();
     }
 
     async createJsonFile(folderId, fileName, content) {
