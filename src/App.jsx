@@ -9,11 +9,24 @@ function App() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const service = new GoogleDriveService(CLIENT_ID);
-        service.initGsi().then(() => {
-            setDriveService(service);
-            setStatus('Listo para conectar');
-        });
+        const waitForGoogle = () => {
+            if (window.google && window.google.accounts) {
+                try {
+                    const service = new GoogleDriveService(CLIENT_ID);
+                    service.initGsi();
+                    setDriveService(service);
+                    setStatus('Listo para conectar');
+                } catch (err) {
+                    console.error('Error inicializando GSI:', err);
+                    setStatus('❌ Error al inicializar Google Services');
+                }
+            } else {
+                // Reintentar en 100ms si el script aún no carga
+                setTimeout(waitForGoogle, 100);
+            }
+        };
+
+        waitForGoogle();
     }, []);
 
     const handleConnectAndTest = async () => {
@@ -63,8 +76,8 @@ function App() {
                         onClick={handleConnectAndTest}
                         disabled={loading}
                         className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all transform active:scale-95 ${loading
-                                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/20'
+                            ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/20'
                             }`}
                     >
                         {loading ? (

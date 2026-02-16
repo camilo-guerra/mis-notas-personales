@@ -13,18 +13,14 @@ export class GoogleDriveService {
     }
 
     initGsi() {
-        return new Promise((resolve) => {
-            this.tokenClient = window.google.accounts.oauth2.initTokenClient({
-                client_id: this.clientId,
-                scope: SCOPES,
-                callback: (response) => {
-                    if (response.error !== undefined) {
-                        throw response;
-                    }
-                    this.accessToken = response.access_token;
-                    resolve(response);
-                },
-            });
+        if (!window.google) {
+            throw new Error('Google Identity Services script not loaded');
+        }
+
+        this.tokenClient = window.google.accounts.oauth2.initTokenClient({
+            client_id: this.clientId,
+            scope: SCOPES,
+            callback: '', // Se definirá dinámicamente en requestAccessToken
         });
     }
 
