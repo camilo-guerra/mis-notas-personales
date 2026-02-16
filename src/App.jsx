@@ -38,7 +38,7 @@ function App() {
     }, []);
 
     const handleConnect = async () => {
-        if (!driveService) return;
+        if (!driveService || loading) return;
         setLoading(true);
         try {
             await driveService.getAccessToken();
@@ -108,22 +108,40 @@ function App() {
         }
     };
 
-    const handleSaveMap = async (data) => {
+    const handleDeleteTopic = async (topicId) => {
+        if (!confirm('¿Estás seguro de que deseas eliminar este tema por completo de tu Google Drive? Esta acción no se puede deshacer.')) return;
+
         setLoading(true);
         try {
-            await driveService.updateJsonFile(mapId, data);
-            setMapData(data);
-            alert('Mapa guardado con éxito');
+            await driveService.deleteFile(topicId);
+            setTopics(prev => prev.filter(t => t.id !== topicId));
         } catch (error) {
             console.error(error);
-            alert('Error al guardar el mapa');
+            alert('Error al eliminar el tema');
         } finally {
             setLoading(false);
         }
     };
 
+    const handleSaveMap = async (data, isSilent = false) => {
+        // No mostrar el loader global en autoguardado para no bloquear la UI
+        if (!isSilent) setLoading(true);
+        try {
+            await driveService.updateJsonFile(mapId, data, isSilent);
+            setMapData(data);
+            if (!isSilent) alert('Mapa guardado con éxito');
+            return true;
+        } catch (error) {
+            console.error(error);
+            if (!isSilent) alert('Error al guardar el mapa');
+            return false;
+        } finally {
+            if (!isSilent) setLoading(false);
+        }
+    };
+
     return (
-        <div className="min-h-screen w-full bg-slate-900 text-white font-sans flex flex-col">
+        <div className="h-screen w-full bg-slate-900 text-white font-sans flex flex-col overflow-hidden">
             <header className="px-6 py-4 flex justify-between items-center border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
                 <div className="flex items-center gap-2">
                     <div className="p-2 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-lg shadow-lg shadow-blue-500/20">
@@ -178,18 +196,21 @@ function App() {
                         topics={topics}
                         onSelect={handleSelectTopic}
                         onCreate={handleCreateTopic}
+                        onDelete={handleDeleteTopic}
                         loading={loading}
                     />
                 )}
 
                 {view === 'map' && activeTopic && (
-                    <MindMap
-                        initialNodes={mapData.nodes}
-                        initialEdges={mapData.edges}
-                        topicName={activeTopic.name}
-                        onSave={handleSaveMap}
-                        onBack={() => setView('selector')}
-                    />
+                    <div className="flex-1 h-full w-full overflow-hidden">
+                        <MindMap
+                            initialNodes={mapData.nodes}
+                            initialEdges={mapData.edges}
+                            topicName={activeTopic.name}
+                            onSave={handleSaveMap}
+                            onBack={() => setView('selector')}
+                        />
+                    </div>
                 )}
             </main>
         </div>

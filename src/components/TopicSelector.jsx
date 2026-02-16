@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, FolderOpen, Map as MapIcon } from 'lucide-react';
+import { Plus, FolderOpen, Map as MapIcon, Trash2 } from 'lucide-react';
 
-const TopicSelector = ({ topics, onSelect, onCreate, loading }) => {
+const TopicSelector = ({ topics, onSelect, onCreate, onDelete, loading }) => {
     const [newTopic, setNewTopic] = useState('');
 
     const handleSubmit = (e) => {
@@ -51,20 +51,35 @@ const TopicSelector = ({ topics, onSelect, onCreate, loading }) => {
 
                 {/* Lista de temas existentes */}
                 {topics.map((topic) => (
-                    <button
+                    <div
                         key={`topic-${topic.id}`}
-                        onClick={() => onSelect(topic)}
-                        disabled={loading}
-                        className="p-6 bg-slate-800/60 border border-slate-700 rounded-3xl hover:bg-slate-700/60 hover:border-slate-600 transition-all flex items-center gap-4 group"
+                        className="group relative"
                     >
-                        <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 group-hover:scale-110 transition-transform">
-                            <MapIcon size={32} />
-                        </div>
-                        <div className="text-left">
-                            <h3 className="text-lg font-bold text-white">{topic.name}</h3>
-                            <p className="text-sm text-slate-500 tracking-tight">Mapa Mental en Drive</p>
-                        </div>
-                    </button>
+                        <button
+                            onClick={() => onSelect(topic)}
+                            disabled={loading}
+                            className="w-full p-6 bg-slate-800/60 border border-slate-700 rounded-3xl hover:bg-slate-700/60 hover:border-blue-500/50 transition-all flex items-center gap-4 text-left"
+                        >
+                            <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 group-hover:scale-110 transition-transform">
+                                <MapIcon size={32} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-lg font-bold text-white truncate">{topic.name}</h3>
+                                <p className="text-sm text-slate-500 tracking-tight">Mapa Mental en Drive</p>
+                            </div>
+                        </button>
+
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(topic.id);
+                            }}
+                            className="absolute top-4 right-4 p-2 bg-slate-900/80 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all z-10"
+                            title="Eliminar Mapa"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    </div>
                 ))}
 
                 {topics.length === 0 && !loading && (
