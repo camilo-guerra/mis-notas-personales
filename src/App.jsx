@@ -123,7 +123,7 @@ function App() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white font-sans flex flex-col">
+        <div className="min-h-screen w-full bg-slate-900 text-white font-sans flex flex-col">
             <header className="px-6 py-4 flex justify-between items-center border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
                 <div className="flex items-center gap-2">
                     <div className="p-2 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-lg shadow-lg shadow-blue-500/20">
